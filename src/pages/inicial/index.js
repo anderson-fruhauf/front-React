@@ -28,7 +28,8 @@ function Inicial() {
     })
 
     const [state, setState] = React.useState({
-        nome: ''
+        nome: '',
+        funcao: ''
     })
 
     const [funcionarioState, setFuncionarioState] = React.useState([])
@@ -66,6 +67,27 @@ function Inicial() {
         })
     }
 
+    async function cadastrar() {
+        if (!state.nome || !state.funcao) {
+            setAlertState({ variant: 'error', message: 'Preencha as informações para proceguir', open: true })
+            return;
+        }
+
+        try {
+            await api.post("/funcionarios", state)
+
+            const response = await api.get("/funcionarios");
+            setFuncionarioState(response.data);
+
+            setAlertState({ variant: 'success', message: 'Cadastro concluido', open: true })
+        } catch (err) {
+            setAlertState({ variant: 'error', message: 'Falha ao cadastrar funcionario, tente novamente mais tarde', open: true })
+        }
+
+    }
+
+
+
     return (
         <div>
             {redirectState.redirect ? <Redirect to={redirectState.path} /> : null}
@@ -87,42 +109,43 @@ function Inicial() {
                 onClose={closeMenu}
             />
             <Container maxWidth='md' className={classes.container}>
-                <h2>
+                <h2 className={classes.h2}>
                     Funcionarios
                 </h2>
 
-                <Grid />
+                <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="nome"
+                    label="nome"
+                    id="nome"
+                    onChange={(e) => { setState({ ...state, nome: e.target.value }) }}
+                />
 
-                <Grid>
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="nome"
-                        label="nome"
-                        type="nome"
-                        id="nome"
-                        onChange={(e) => { setState({ ...state, nome: e.target.value }) }}
-                    />
+                <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="funcao"
+                    id="funcao"
+                    label="função"
+                    onChange={(e) => { setState({ ...state, funcao: e.target.value }) }}
+                />
+                <Button variant="contained" color="primary" className={classes.button} onClick={cadastrar}>
+                    Cadastrar
+                </Button>
 
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="nome"
-                        label="nome"
-                        type="nome"
-                        id="nome"
-                        onChange={(e) => { setState({ ...state, nome: e.target.value }) }}
-                    />
-                </Grid>
+            </Container>
 
-                <Grid />
-
+            <Container maxWidth='lg'>
                 <Tabela
+                    className={classes.tabela}
                     lista={funcionarioState}
                 />
             </Container>
+
+
 
         </div>
     );
@@ -130,18 +153,27 @@ function Inicial() {
 
 const useStyles = makeStyles(theme => ({
     container: {
-        alignItems: 'center',
         textAlign: 'center',
-        color: grey[700],
         marginTop: 30,
     },
+    h2: {
+        color: grey[700],
+    },
+    tabela: {
+        marginTop: 65,
+    },
+    button: {
+        alignSelf: 'rigth',
+        margin: 5,
+        float: 'right'
+    }
 }));
 
 
 function Tabela(props) {
     const { lista } = props
     return (
-        <Table stickyHeader aria-label="sticky table">
+        <Table stickyHeader aria-label="sticky table" {...props}>
             <TableHead>
                 <TableRow>
                     <TableCell>
