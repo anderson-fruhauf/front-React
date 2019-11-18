@@ -8,6 +8,7 @@ import { isAuthenticated } from "./services/auth";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import App from "./pages/App";
+import Inicial from './pages/inicial'
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
@@ -16,8 +17,8 @@ const PrivateRoute = ({ component: Component, ...rest }) => (
       isAuthenticated() ? (
         <Component {...props} />
       ) : (
-        <Redirect to={{ pathname: "/", state: { from: props.location } }} />
-      )
+          <Redirect to={{ pathname: "/", state: { from: props.location } }} />
+        )
     }
   />
 );
@@ -29,6 +30,7 @@ const Routes = () => (
         <Route exact path="/" component={SignIn} />
         <Route path="/signup" component={SignUp} />
         <PrivateRoute path="/app" component={App} />
+        <PrivateRoute path="/home" component={Inicial} />
         <Route path="*" component={() => <h1>Page not found</h1>} />
       </Switch>
       <ModalContainer />

@@ -1,31 +1,42 @@
-import React, { Component } from "react";
-import { Link, withRouter } from "react-router-dom";
-
+import React from "react";
+import { Link, withRouter, Redirect } from "react-router-dom";
 import Logo from "../../assets/airbnb-logo.svg";
 import api from "../../services/api";
 import { login } from "../../services/auth";
+import { Button, TextField } from '@material-ui/core';
+
+import { Alert } from '../../components/alert'
 
 import { Form, Container } from "./styles";
 
-class SignIn extends Component {
-  state = {
+
+function SignIn() {
+
+  const [state, setState] = React.useState({
     email: "",
     password: "",
-    error: ""
-  };
+    error: "",
+    alertOpen: false,
+    redirect: false,
+  })
 
-  handleSignIn = async e => {
-    e.preventDefault();
-    const { email, password } = this.state;
+  const handleSignIn = async () => {
+    const { email, password } = state;
+    console.table(email, password);
+
     if (!email || !password) {
-      this.setState({ error: "Preencha e-mail e senha para continuar!" });
+      setState({ ...state, error: "Preencha e-mail e senha para continuar!", alertOpen: true });
     } else {
       try {
-        const response = await api.post("/sessions", { email, password });
+        const response = await api.post("/autenticate", { email, password });
         login(response.data.token);
-        this.props.history.push("/app");
+        setState({ ...state, redirect: true })
+        console.log('logou ==> token = ' + response.data.token);
       } catch (err) {
-        this.setState({
+        //alert("Houve um problema com o login, verifique suas credenciais. T.T")
+        setState({
+          ...state,
+          alertOpen: true,
           error:
             "Houve um problema com o login, verifique suas credenciais. T.T"
         });
@@ -33,29 +44,60 @@ class SignIn extends Component {
     }
   };
 
-  render() {
-    return (
-      <Container>
-        <Form onSubmit={this.handleSignIn}>
-          <img src={Logo} alt="Airbnb logo" />
-          {this.state.error && <p>{this.state.error}</p>}
-          <input
-            type="email"
-            placeholder="Endereço de e-mail"
-            onChange={e => this.setState({ email: e.target.value })}
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            onChange={e => this.setState({ password: e.target.value })}
-          />
-          <button type="submit">Entrar</button>
-          <hr />
-          <Link to="/signup">Criar conta grátis</Link>
-        </Form>
-      </Container>
-    );
-  }
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setState({ ...state, alertOpen: false });
+  };
+
+  return (
+    <Container>
+
+      {state.redirect ? <Redirect to='/home' /> : null}
+
+      <Alert
+        open={state.alertOpen}
+        onClose={handleClose}
+        variant="error"
+        message={state.error}
+      />
+      <Form>
+        <img src={Logo} alt="Airbnb logo" />
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="email"
+          label="Email Address"
+          name="email"
+          autoComplete="email"
+          onChange={(e) => { setState({ ...state, email: e.target.value }) }}
+          autoFocus
+        />
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          name="password"
+          label="Password"
+          type="password"
+          id="password"
+          autoComplete="current-password"
+          onChange={(e) => { setState({ ...state, password: e.target.value }) }}
+        />
+
+        <Button variant="contained" color="primary" onClick={handleSignIn}>
+          Entrar
+          </Button>
+
+        <hr />
+        <Link to="/signup">Criar conta grátis</Link>
+      </Form>
+    </Container >
+  );
+
 }
 
 export default withRouter(SignIn);
